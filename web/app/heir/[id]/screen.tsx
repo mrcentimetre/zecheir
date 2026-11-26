@@ -4,7 +4,7 @@ import { Check, ChevronLeft, Copy, EyeOff, Unlock } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import BottomBar from "@/components/bottom-bar";
-import { Amount, Avatar, IconButton, Loading, Rows, Screen, Tile } from "@/components/ui";
+import { RecordedNote, Amount, Avatar, IconButton, Loading, Rows, Screen, Tile } from "@/components/ui";
 import { useVault } from "@/lib/use-vault";
 
 export default function Heir() {
@@ -27,6 +27,7 @@ export default function Heir() {
         </div>
         <Avatar name={vault.heir.name} tone="paper" />
       </header>
+      <RecordedNote show={vault.recorded} />
 
       <h1 className="mt-1 text-[32px] leading-[1.05] font-extrabold tracking-[-0.035em]">
         {released ? `${vault.owner} left you something.` : `${vault.owner} named you as heir.`}

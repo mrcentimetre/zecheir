@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import BottomBar from "@/components/bottom-bar";
-import { Avatar, IconButton, Label, Loading, Row, Rows, Screen, cn } from "@/components/ui";
+import { RecordedNote, Avatar, IconButton, Label, Loading, Row, Rows, Screen, cn } from "@/components/ui";
 import { api, type VaultView } from "@/lib/api";
 import { every, short } from "@/lib/format";
 import { useVault } from "@/lib/use-vault";
@@ -39,6 +39,7 @@ export default function SettingsScreen() {
         </IconButton>
         <p className="text-[19px] font-extrabold tracking-[-0.02em]">Settings</p>
       </header>
+      <RecordedNote show={vault.recorded} />
 
       <section className="flex flex-col gap-2.5">
         <Label>This vault</Label>

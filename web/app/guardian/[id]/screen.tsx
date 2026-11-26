@@ -4,7 +4,7 @@ import { ArrowRight, Check, ChevronLeft, Copy, LoaderCircle, X } from "lucide-re
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import BottomBar from "@/components/bottom-bar";
-import { Amount, Avatar, Button, ButtonLink, ErrorNote, IconButton, Label, Loading, Row, Rows, Screen, Segments, Tile, cn } from "@/components/ui";
+import { RecordedNote, Amount, Avatar, Button, ButtonLink, ErrorNote, IconButton, Label, Loading, Row, Rows, Screen, Segments, Tile, cn } from "@/components/ui";
 import { api, type ReleaseStep, type VaultView } from "@/lib/api";
 import { short } from "@/lib/format";
 import { useVault } from "@/lib/use-vault";
@@ -25,6 +25,7 @@ export default function Guardian() {
         </div>
         <Avatar name={vault.guardian} tone="indigo" />
       </header>
+      <RecordedNote show={vault.recorded} />
       {vault.release ? <Signing vault={vault} setVault={setVault} /> : <Approve vault={vault} setVault={setVault} />}
       <BottomBar id={vault.id} />
     </Screen>

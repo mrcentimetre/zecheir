@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import BottomBar from "@/components/bottom-bar";
 import { ShareCard, ShareStack } from "@/components/share-stack";
-import { Amount, Avatar, Button, ButtonLink, ErrorNote, Label, Loading, Pill, RoundAction, Screen, Segments, Tile, cn } from "@/components/ui";
+import { RecordedNote, Amount, Avatar, Button, ButtonLink, ErrorNote, Label, Loading, Pill, RoundAction, Screen, Segments, Tile, cn } from "@/components/ui";
 import { api, type VaultView } from "@/lib/api";
 import { clock, every, short } from "@/lib/format";
 import { useVault } from "@/lib/use-vault";
@@ -69,6 +69,7 @@ export default function VaultHome() {
         </div>
         <PhasePill phase={s.phase} />
       </header>
+      <RecordedNote show={vault.recorded} />
 
       <section className="mt-2">
         <Label>{done ? `Released to ${vault.heir.name}` : "Vault balance"}</Label>

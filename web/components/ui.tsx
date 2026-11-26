@@ -157,6 +157,17 @@ export function Loading({ error }: { error: string | null }) {
   );
 }
 
+/** Shown when the vault on screen is the recorded copy, not live. */
+export function RecordedNote({ show }: { show?: boolean }) {
+  if (!show) return null;
+  return (
+    <p className="rounded-[20px] bg-surface px-4 py-3 text-[13.5px] leading-snug font-medium text-muted-foreground">
+      <span className="font-bold text-primary">Recorded demo.</span> The live signing server is offline, so you&apos;re seeing the real testnet release as it
+      happened. Actions are disabled.
+    </p>
+  );
+}
+
 export function ErrorNote({ message }: { message: string | null }) {
   if (!message) return null;
   return (
