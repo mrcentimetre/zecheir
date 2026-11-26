@@ -1,0 +1,24 @@
+# Third-party tool sources and builds (cloned + compiled locally, see README)
+tools/
+
+# Runtime data: FROST configs hold key shares, wallets hold viewing keys
+data/
+*.toml.key
+.frost*/
+*.pczt
+frost_pczt.*
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+
+# OS / editor
+.DS_Store
+*.log
