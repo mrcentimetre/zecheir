@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ZecHeir cover</title>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { width: 1600px; height: 900px; background: #131318; color: #f2f2f5; font-family: Urbanist, sans-serif; overflow: hidden; }
+  .wrap { display: flex; height: 100%; padding: 0 0 0 110px; align-items: center; gap: 40px; }
+  .copy { width: 640px; flex: none; }
+  .brand { display: flex; align-items: center; gap: 16px; }
+  .brand span { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; }
+  h1 { margin-top: 44px; font-size: 76px; line-height: 1.0; font-weight: 800; letter-spacing: -0.04em; }
+  h1 em { font-style: normal; color: #f4b728; }
+  p.sub { margin-top: 28px; font-size: 27px; line-height: 1.35; font-weight: 500; color: #9d9dab; max-width: 560px; }
+  .chips { margin-top: 40px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .chip { padding: 12px 22px; border-radius: 999px; font-size: 21px; font-weight: 700; background: #282832; }
+  .chip.y { background: #f4b728; color: #141210; }
+  .chip.i { background: #5b57f2; color: #fff; }
+  .phones { position: relative; flex: 1; height: 100%; }
+  .phone { position: absolute; width: 330px; border-radius: 52px; padding: 11px; background: #2c2c36; box-shadow: 0 40px 80px -30px rgba(0,0,0,.8); }
+  .phone img { display: block; width: 100%; border-radius: 42px; }
+  .p1 { left: 10px; top: 150px; transform: rotate(-6deg); }
+  .p2 { left: 290px; top: 70px; z-index: 2; }
+  .p3 { left: 570px; top: 150px; transform: rotate(6deg); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="copy">
+      <div class="brand">
+        <svg width="58" height="58" viewBox="0 0 34 34"><rect width="34" height="34" rx="11" fill="#F4B728"/><path d="M17 7.5l7.5 2.7v5.4c0 4.8-3.1 8.4-7.5 9.9-4.4-1.5-7.5-5.1-7.5-9.9v-5.4L17 7.5z" fill="#141210"/><circle cx="17" cy="15.4" r="2.1" fill="#F4B728"/><path d="M16 17h2l.6 4h-3.2l.6-4z" fill="#F4B728"/></svg>
+        <span>ZecHeir</span>
+      </div>
+      <h1>Your ZEC reaches your family.<br><em>Even if you can't.</em></h1>
+      <p class="sub">Private inheritance for shielded ZEC. A 2-of-3 FROST vault with a check-in switch.</p>
+      <div class="chips">
+        <span class="chip y">FROST 2-of-3</span>
+        <span class="chip i">Shielded · Ironwood</span>
+        <span class="chip">Live on Zcash testnet</span>
+      </div>
+    </div>
+    <div class="phones">
+      <div class="phone p1"><img src="screens/1-welcome.png" alt=""></div>
+      <div class="phone p2"><img src="screens/2-vault.png" alt=""></div>
+      <div class="phone p3"><img src="screens/5-heir.png" alt=""></div>
+    </div>
+  </div>
+</body>
+</html>
