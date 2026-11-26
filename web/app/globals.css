@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+/* ZecHeir — flat, solid, graphite.
+ * One bright colour (Zcash yellow) carries the main action on every screen.
+ * The three key shares each own a solid colour, used the same way everywhere:
+ *   owner = yellow, guardian = indigo, switch = paper (off-white).
+ * No glows, no gradients, no glass: separation comes from solid surfaces. */
+:root {
+  color-scheme: dark;
+
+  --background: #131318;
+  --surface: #1e1e26;
+  --surface-2: #282832;
+  --surface-3: #33333f;
+  --foreground: #f2f2f5;
+  --muted-foreground: #9d9dab;
+  --subtle: #74748a;
+
+  --primary: #f4b728;
+  --primary-ink: #141210;
+  --indigo: #5b57f2;
+  --paper: #ececf1;
+  --paper-ink: #16161c;
+
+  --alive: #6fe3a0;
+  --wait: #ff8a5c;
+  --block: #ff6b6b;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle: var(--subtle);
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --color-indigo: var(--indigo);
+  --color-paper: var(--paper);
+  --color-paper-ink: var(--paper-ink);
+  --color-alive: var(--alive);
+  --color-wait: var(--wait);
+  --color-block: var(--block);
+  --font-sans: var(--font-urbanist), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+html,
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+input[type="checkbox"].zh-check {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--surface-3);
+  display: grid;
+  place-content: center;
+  flex: none;
+  cursor: pointer;
+}
+input[type="checkbox"].zh-check::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  clip-path: polygon(14% 52%, 0 66%, 40% 100%, 100% 22%, 86% 8%, 40% 70%);
+  background: var(--primary-ink);
+  transform: scale(0);
+  transition: transform 0.15s ease-out;
+}
+input[type="checkbox"].zh-check:checked {
+  background: var(--primary);
+}
+input[type="checkbox"].zh-check:checked::before {
+  transform: scale(1);
+}
+
+@keyframes zh-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.zh-in {
+  animation: zh-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) var(--d, 0s) both;
+}
+
+@keyframes zh-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+.zh-blink {
+  animation: zh-blink 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
