@@ -1,6 +1,7 @@
 import { RECORDED_DEMO } from "./snapshot";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8787";
+// The hosted switch service; set NEXT_PUBLIC_ZECHEIR_API (e.g. http://localhost:8787) to use your own.
+export const API_URL = process.env.NEXT_PUBLIC_ZECHEIR_API || "https://zecheir-api.nimsara.me";
 
 export type Phase = "armed" | "grace" | "releasable" | "signing" | "released" | "paused";
 

@@ -157,7 +157,7 @@ APP_URL=http://localhost:3001 \
 bun run index.ts                                   # http://localhost:8787
 
 cd ../web && bun install
-NEXT_PUBLIC_API_URL=http://localhost:8787 \
+NEXT_PUBLIC_ZECHEIR_API=http://localhost:8787 \
 NEXT_PUBLIC_TELEGRAM_BOT=<optional bot username> \
 bun run dev -- -p 3001                             # http://localhost:3001
 ```
