@@ -1,0 +1,211 @@
+diff --git a/src/commands/pczt.rs b/src/commands/pczt.rs
+index cd6c3d7..fe53e4a 100644
+--- a/src/commands/pczt.rs
++++ b/src/commands/pczt.rs
+@@ -5,6 +5,7 @@ pub(crate) mod create;
+ pub(crate) mod create_manual;
+ pub(crate) mod create_max;
+ pub(crate) mod extract;
++pub(crate) mod frost_sign;
+ pub(crate) mod inspect;
+ pub(crate) mod pay_manual;
+ pub(crate) mod plan_batches;
+@@ -49,6 +50,8 @@ pub(crate) enum Command {
+     Sign(sign::Command),
+     /// Adds an externally-created signature to a PCZT
+     UpdateWithSignature(update_with_signature::Command),
++    /// Apply externally-produced (FROST) RedPallas signatures to Orchard/Ironwood spends
++    FrostSign(frost_sign::Command),
+     /// Combine two PCZTs
+     Combine(combine::Command),
+     /// Extract a finished transaction from a PCZT
+diff --git a/src/commands/pczt/frost_sign.rs b/src/commands/pczt/frost_sign.rs
+new file mode 100644
+index 0000000..af6d4d5
+--- /dev/null
++++ b/src/commands/pczt/frost_sign.rs
+@@ -0,0 +1,172 @@
++//! `pczt frost-sign`: apply externally produced (e.g. FROST 2-of-3) RedPallas spend
++//! authorizations to the Orchard and Ironwood spends of a PCZT.
++//!
++//! Ported from ZcashFoundation/frost-tools `zcash-sign sign` (which reads the same
++//! prompts), but built against this crate's librustzcash revision so it understands
++//! the current (NU7) consensus branch. Added for ZecHeir.
++
++use std::io::Write;
++
++use anyhow::anyhow;
++use clap::Args;
++use group::ff::PrimeField;
++use orchard::primitives::redpallas::{self, SpendAuth};
++use pczt::{
++    Pczt,
++    roles::low_level_signer::{OrchardParseError, Signer},
++};
++use tokio::io::AsyncReadExt;
++use zcash_primitives::transaction::sighash::{PrecomputedSighashData, SignableInput};
++
++// Options accepted for the `pczt frost-sign` command
++#[derive(Debug, Args)]
++pub(crate) struct Command {
++    /// Path to the unsigned PCZT (as produced by `pczt create` / `create-max`)
++    #[arg(long)]
++    input: String,
++
++    /// Path to write the signed PCZT to
++    #[arg(long)]
++    output: String,
++}
++
++#[derive(Debug)]
++enum SignErr {
++    #[allow(dead_code)]
++    Parse(OrchardParseError),
++    #[allow(dead_code)]
++    Apply(orchard::pczt::SignerError),
++}
++
++impl From<OrchardParseError> for SignErr {
++    fn from(e: OrchardParseError) -> Self {
++        SignErr::Parse(e)
++    }
++}
++
++#[derive(Clone, Copy, PartialEq, Eq)]
++enum Pool {
++    Orchard,
++    Ironwood,
++}
++
++impl Pool {
++    fn label(self) -> &'static str {
++        match self {
++            Pool::Orchard => "orchard",
++            Pool::Ironwood => "ironwood",
++        }
++    }
++}
++
++fn collect_randomizers(bundle: &mut orchard::pczt::Bundle, out: &mut Vec<(usize, [u8; 32])>) {
++    for (idx, action) in bundle.actions_mut().iter().enumerate() {
++        if action.spend().spend_auth_sig().is_none() {
++            if let Some(alpha) = action.spend().alpha() {
++                let repr = alpha.to_repr();
++                let bytes: [u8; 32] = AsRef::<[u8]>::as_ref(&repr)
++                    .try_into()
++                    .expect("a Pallas scalar repr is 32 bytes");
++                out.push((idx, bytes));
++            }
++        }
++    }
++}
++
++fn apply_signatures(
++    bundle: &mut orchard::pczt::Bundle,
++    sighash: [u8; 32],
++    signatures: &[(usize, [u8; 64])],
++) -> Result<(), SignErr> {
++    let actions = bundle.actions_mut();
++    for (idx, sig) in signatures {
++        let signature = redpallas::Signature::<SpendAuth>::from(*sig);
++        actions[*idx]
++            .apply_signature(sighash, signature)
++            .map_err(SignErr::Apply)?;
++    }
++    Ok(())
++}
++
++impl Command {
++    pub(crate) async fn run(self) -> Result<(), anyhow::Error> {
++        let mut buf = vec![];
++        tokio::fs::File::open(&self.input)
++            .await?
++            .read_to_end(&mut buf)
++            .await?;
++        let pczt = Pczt::parse(&buf).map_err(|e| anyhow!("Failed to read PCZT: {:?}", e))?;
++
++        // Same sighash computation as `pczt inspect` ("Sighash for shielded components").
++        let tx_data = pczt.clone().into_effects().map_err(|e| anyhow!("{e:?}"))?;
++        let sighash_data = PrecomputedSighashData::new_zip244(tx_data).map_err(|e| anyhow!("{e}"))?;
++        let sighash: [u8; 32] = *sighash_data.signature_hash(&SignableInput::Shielded).as_ref();
++        println!("SIGHASH: {}", hex::encode(sighash));
++
++        // Pass 1: the randomizer (alpha) of each real spend awaiting a signature.
++        let mut randomizers: Vec<(Pool, usize, [u8; 32])> = vec![];
++        for pool in [Pool::Orchard, Pool::Ironwood] {
++            let mut found = vec![];
++            let signer = Signer::new(pczt.clone());
++            let res = match pool {
++                Pool::Orchard => signer.sign_orchard_with(|_, bundle, _| -> Result<(), OrchardParseError> {
++                    collect_randomizers(bundle, &mut found);
++                    Ok(())
++                }),
++                Pool::Ironwood => signer.sign_ironwood_with(|_, bundle, _| -> Result<(), OrchardParseError> {
++                    collect_randomizers(bundle, &mut found);
++                    Ok(())
++                }),
++            };
++            // A transaction without a bundle in this pool simply has no spends there.
++            if res.is_ok() {
++                randomizers.extend(found.into_iter().map(|(i, a)| (pool, i, a)));
++            }
++        }
++        if randomizers.is_empty() {
++            return Err(anyhow!("PCZT has no Orchard or Ironwood spends awaiting a signature"));
++        }
++        for (pool, idx, alpha) in &randomizers {
++            println!("Randomizer #{idx} ({}): {}", pool.label(), hex::encode(alpha));
++        }
++
++        // Read one hex signature per randomizer, in the same order.
++        let mut signatures = vec![];
++        for (pool, idx, _) in &randomizers {
++            println!("Input hex-encoded signature #{idx} ({}): ", pool.label());
++            std::io::stdout().flush()?;
++            let mut line = String::new();
++            std::io::stdin().read_line(&mut line)?;
++            let sig: [u8; 64] = hex::decode(line.trim())?
++                .try_into()
++                .map_err(|_| anyhow!("signature #{idx} must be 64 bytes"))?;
++            signatures.push((*pool, *idx, sig));
++        }
++
++        // Pass 2: inject each signature (apply_signature verifies it against rk first).
++        let mut signed = Signer::new(pczt);
++        for pool in [Pool::Orchard, Pool::Ironwood] {
++            let for_pool: Vec<(usize, [u8; 64])> = signatures
++                .iter()
++                .filter(|(p, _, _)| *p == pool)
++                .map(|(_, i, s)| (*i, *s))
++                .collect();
++            if for_pool.is_empty() {
++                continue;
++            }
++            signed = match pool {
++                Pool::Orchard => signed.sign_orchard_with(|_, b, _| apply_signatures(b, sighash, &for_pool)),
++                Pool::Ironwood => signed.sign_ironwood_with(|_, b, _| apply_signatures(b, sighash, &for_pool)),
++            }
++            .map_err(|e| anyhow!("applying {} signatures failed: {e:?}", pool.label()))?;
++        }
++
++        let bytes = signed
++            .finish()
++            .serialize()
++            .map_err(|e| anyhow!("Failed to serialize PCZT: {:?}", e))?;
++        tokio::fs::write(&self.output, bytes).await?;
++        println!("Signed PCZT written to {}", self.output);
++        Ok(())
++    }
++}
+diff --git a/src/main.rs b/src/main.rs
+index 6a2b852..1913b3d 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -218,6 +218,7 @@ fn main() -> Result<(), anyhow::Error> {
+                 commands::pczt::Command::Prove(command) => command.run(wallet_dir).await,
+                 commands::pczt::Command::Sign(command) => command.run(wallet_dir).await,
+                 commands::pczt::Command::UpdateWithSignature(command) => command.run().await,
++                commands::pczt::Command::FrostSign(command) => command.run().await,
+                 commands::pczt::Command::Combine(command) => command.run().await,
+                 commands::pczt::Command::Extract(command) => command.run().await,
+                 commands::pczt::Command::Send(command) => command.run(wallet_dir).await,
