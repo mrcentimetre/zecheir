@@ -10,6 +10,9 @@ Your shielded ZEC reaches your family, even if you can't. Nobody can take it ear
 
 **Live app:** https://zecheir.vercel.app (installable PWA; on iPhone use Safari → Share → Add to Home Screen)
 
+> The signing service (frostd + the switch) runs on the builder's machine during the hackathon. When it's offline, the app shows a
+> **recorded copy** of the real testnet release below, clearly labelled, with actions disabled. To run everything yourself, see [Running it](#running-it).
+
 **Proof it works on-chain:** a vault held by a 2-of-3 FROST key released its funds to the heir in testnet transaction
 [`2946ddc6…6a39`](https://testnet.zcashexplorer.app/transactions/2946ddc6820cbab6d6158f32e740b2b75e6a44cd520d44d3db71cb11c24f6a39)
 (block 4,666,761, Ironwood pool). The heir's wallet received 0.0999 TAZ and decrypted the memo
